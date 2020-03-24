@@ -1,0 +1,25 @@
+{
+    "name": "uix-precompile-loader",
+    "version": "1.0.0",
+    "description": "web precompile webpack loader",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/dyangjs/uix-precompile-loader.git"
+    },
+    "keywords": [
+        "precompile"
+    ],
+    "author": "damon;jie yang;uixjs",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/dyangjs/uix-precompile-loader/issues"
+    },
+    "homepage": "https://github.com/dyangjs/uix-precompile-loader#readme",
+    "dependencies": {
+        "loader-utils": "^2.0.0"
+    }
+}
