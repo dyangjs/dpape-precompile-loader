@@ -46,6 +46,22 @@ var recursionGetCondition = (data)=>{
     data = data || new Object();
     var result = new Array();
     const keys = Object.keys(data);
+    if(data.common){
+        const commonKeys = Object.keys(data.common);
+        commonKeys.map(key=>{
+            const v = data.common[key];
+            if(typeof v === 'boolean' && v) result.push(key);
+            if(typeof v === 'object' && v.enabled) result.push(key);
+        });
+    }
+    const fnAddkey = (data)=>{
+        const fnKeys = Object.keys(data);
+        fnKeys.map(fnKey=>{
+            const fnV = data[fnKey];
+            if(typeof fnV === 'boolean' && fnV) result.push(fnKey);
+            if(typeof fnV === 'object' && fnV.enabled) result.push(fnKey);
+        });
+    };
     keys.map(key=>{
         const val = data[key];
         var enabled = false;
@@ -55,6 +71,7 @@ var recursionGetCondition = (data)=>{
         }
         if(enabled) result.push(key);
         if(!enabled) return;
+        if(typeof val === 'object' && val.fn) fnAddkey(val.fn);
         if(typeof val === 'object' && !(val instanceof Array) && val.children){
             var childResult = recursionGetCondition(val.children);
             result = result.concat(childResult);
@@ -80,6 +97,9 @@ module.exports = function(source) {
         var platform = process.env[name] || '';
         condition = platform.split(',');
     };
+    if(options.config) {
+        condition = recursionGetCondition(options.config);
+    }
     source = otherPrecompile(source,condition);
     source = htmlPrecompile(source,condition);
     return source;

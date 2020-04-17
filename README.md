@@ -16,7 +16,27 @@ module.exports = {
                 options:{
                     /** process.env[`platformName`] */
                     platformName:"platform",
-                    configPath:path.join(__dirname,'./config.json')
+                    configPath:path.join(__dirname,'./config.json'),
+                    config:{
+                        /** 公共板块 **/
+                        common:{
+                            common1:true,
+                            common2:true
+                        },
+                        /** 其他板块 **/
+                        home:{
+                            /** 子功能板块 **/
+                            fn:{
+                                fn1:true,
+                                fn2:false
+                            },
+                            /** 子模块 **/
+                            children:{
+                                "module-child1":true,
+                                "module-child2":false
+                            }
+                        }
+                    }
                 }
             }
         ]
