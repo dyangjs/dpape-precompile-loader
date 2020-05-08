@@ -1,24 +1,24 @@
 {
-    "name": "uix-precompile-loader",
-    "version": "1.0.2",
+    "name": "dpape-precompile-loader",
+    "version": "1.0.3",
     "description": "web precompile webpack loader",
-    "main": "index.js",
+    "main": "index.js", 
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/dyangjs/uix-precompile-loader.git"
+        "url": "git+https://github.com/dyangjs/dpape-precompile-loader.git"
     },
     "keywords": [
         "precompile"
     ],
-    "author": "damon;jie yang;uixjs",
+    "author": "damon;jie yang;dpape",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/dyangjs/uix-precompile-loader/issues"
+        "url": "https://github.com/dyangjs/dpape-precompile-loader/issues"
     },
-    "homepage": "https://github.com/dyangjs/uix-precompile-loader#readme",
+    "homepage": "https://github.com/dyangjs/dpape-precompile-loader#readme",
     "dependencies": {
         "loader-utils": "^2.0.0"
     }

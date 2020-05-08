@@ -2,7 +2,7 @@
 
 ## Install
 ```shell
-npm i uix-precompile-loader -D
+npm i dpape-precompile-loader -D
 ```
 
 ```javascript
@@ -12,7 +12,7 @@ module.exports = {
         rules: [
             {
                 test: /\.(jsx|tsx|js|ts|vue)$/,
-                loader: "uix-precompile-loader",
+                loader: "dpape-precompile-loader",
                 options:{
                     /** process.env[`platformName`] */
                     platformName:"platform",
@@ -45,10 +45,10 @@ module.exports = {
 /** Example **/
 //#IF DEV
 console.log('开发环境输出');
-//#IF
+//#ENDIF DEV
 //#IF PROD
 console.log('生产环境输出');
-//#IF
+//#ENDIF PROD
 
 /** HTML Example **/
 <!-- #IF DEV -->
@@ -122,7 +122,7 @@ console.log('生产环境输出');
 /** 配置文件的Key是条件判断 **/
 //#IF module
 console.log('模块1');
-//#IF
+//#ENDIF module
 ```
 
 ## 注意

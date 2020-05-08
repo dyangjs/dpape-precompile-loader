@@ -2,24 +2,31 @@ var utils = require('loader-utils');
 var fs = require('fs');
 var getOptions = utils.getOptions;
 var otherPrecompile = function(source,condition){
-    var reg = /(\/\/\#[i|I][f|F])((?!\n\r)\s)(((?!(#[i|I][f|F])).)+)[\r\n](((?!(#[i|I][f|F]))[\s\S])+)[\r\n]((?![\r|\n])\s)*(\/\/\#[i|I][f|F])/g;
-    condition = condition || new Array();
     if(!source) return source;
+    var reg = /(\/\/\#[i|I][f|F])((?!\n\r)\s)(((?!(#[i|I][f|F])).)+)[\r\n]([\s\S]+)[\r\n]((?![\r|\n])\s)*(\/\/\#[e|E][n|N][d|D][i|I][f|F])/;
+    condition = condition || new Array();
+    let platformValue = "";
     source = source.replace(reg,value=>{
-        var regs = /(\/\/\#[i|I][f|F])((?!\n\r)\s)(((?!(#[i|I][f|F])).)+)[\r\n]/g;
-        let platformValue = "";
+        var regs = /(\/\/\#[i|I][f|F])((?!\n\r)\s)(((?!(#[i|I][f|F])).)+)[\r\n]/;
         value.replace(regs, env => {
             platformValue = env.replace(/\/\/\#[i|I][f|F]/g, '').trim();
             return env;
         });
-        if (condition.indexOf(platformValue) >= 0) {
-            var regsL = /(\/\/\#[i|I][f|F])((?!\n\r)\s)(((?!(#[i|I][f|F])).)+)[\r\n]/g;
-            var regsR = /[\r\n]((?![\r|\n])\s)*(\/\/\#[i|I][f|F])[\r\n]{0,1}/g;
-            value = value.replace(regsL, '').replace(regsR, '');
-            return value;
-        }
-        return '';
-    });
+        return value;
+    });   
+    if(condition.indexOf(platformValue) >= 0){
+        /** Has Exist */
+        var regsL = new RegExp(`(\\/\\/\\#[i|I][f|F])((?!\\n\\r)\\s)${platformValue}[\\r\\n]`);
+        var regsR = new RegExp(`[\\r\\n]((?![\\r|\\n])\\s)*(\\/\\/\\#[e|E][n|N][d|D][i|I][f|F]\\s${platformValue})[\\r\\n]{0,1}`);
+        source = source.replace(regsL, '').replace(regsR, '');
+    }else{
+        //** Not Exist */
+        var notExistReg = new RegExp(`(\\/\\/\\#[i|I][f|F])((?!\\n\\r)\\s)${platformValue}[\\r\\n]([\\s\\S]+)[\\r\\n]((?![\\r|\\n])\\s)*(\\/\\/\\#[e|E][n|N][d|D][i|I][f|F](\\s)${platformValue}[\\r\\n]{0,1})`);
+        source = source.replace(notExistReg,'');
+    }
+    if(source.match(/(\/\/\#[i|I][f|F])/) && source.match(/(\/\/\#[e|E][n|N][d|D][i|I][f|F])/)){  
+        return otherPrecompile(source,condition);
+    }
     return source;
     
 };
