@@ -1,10 +1,10 @@
 {
     "name": "dpape-precompile-loader",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "web precompile webpack loader",
-    "main": "index.js", 
+    "main": "lib/index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "build": "node ./build/index.js"
     },
     "repository": {
         "type": "git",
@@ -13,13 +13,19 @@
     "keywords": [
         "precompile"
     ],
+    "files": [
+        "lib"
+    ],
     "author": "damon;jie yang;dpape",
     "license": "MIT",
     "bugs": {
         "url": "https://github.com/dyangjs/dpape-precompile-loader/issues"
     },
     "homepage": "https://github.com/dyangjs/dpape-precompile-loader#readme",
-    "dependencies": {
-        "loader-utils": "^2.0.0"
+    "devDependencies": {
+        "io-spin": "^0.4.1",
+        "loader-utils": "^2.0.0",
+        "uglify-js": "^3.10.0",
+        "@types/node": "^14.0.13"
     }
 }
