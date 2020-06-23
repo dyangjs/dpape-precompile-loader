@@ -7,17 +7,11 @@ type configItem = {
 }
 
 const jsCodePrecompile = (source: string, key: string, isPass: boolean = false) => {
-    const matchReg = new RegExp(`\\/\\/\\#IF[\\s]${key}[\\r\\n]((?!(\\/\\/#IF)).|\\n)+\\/\\/\\#ENDIF[\\s]${key}[\\r\\n]{0,1}`, 'g')
-    source = source.replace(matchReg, val => {
-        var regs = /(\/\/\#IF)((?!\n\r)\s)(((?!(#IF)).)+)[\r\n]/;
-        let platformValue = "";
-        val.replace(regs, env => {
-            platformValue = env.replace(/\/\/\#IF/g, '').trim();
-            return env;
-        });
-        if (!isPass) return '';
-        var regsL = new RegExp(`(\\/\\/\\#IF)((?!\\n\\r)\\s)${platformValue}[\\r\\n]`);
-        var regsR = new RegExp(`[\\r\\n]((?![\\r|\\n])\\s)*(\\/\\/\\#ENDIF\\s${platformValue})[\\r\\n]`);
+    const matchReg = new RegExp(`\\/\\/\\#IF[\\s]{1,}${key}[\\s]{0,}[\\r\\n]((?!\\#IF).|\\r\\n)+\\/\\/\\#ENDIF[\\s]{1,}${key}[\\s]{0,}[\\r\\n]`, 'g');   
+    source = source.replace(matchReg, val => {        
+        if (!isPass) return '';        
+        var regsL = new RegExp(`(\\/\\/\\#IF)((?!\\n\\r)\\s)${key}`);
+        var regsR = new RegExp(`((?![\\r|\\n])\\s)*(\\/\\/\\#ENDIF\\s${key})`);
         val = val.replace(regsL, '').replace(regsR, '');
         return val;
     });
@@ -25,16 +19,12 @@ const jsCodePrecompile = (source: string, key: string, isPass: boolean = false) 
 }
 
 const htmlCodePrecompile = (source: string, key: string, isPass: boolean = false) => {
-    const matchReg = new RegExp(`\\<\\!\\-\\-[\\s]{0,}\\#IF[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\r\\n]((?!(\\/\\/#IF)).|\\n)+\\<\\!\\-\\-[\\s]{0,}\\#ENDIF[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}`, 'g')
+    const matchReg = new RegExp(`\\<\\!\\-\\-[\\s]{0,}\\#IF[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\r\\n]((?!\\/\\/#IF).|\\r\\n)+\\<\\!\\-\\-[\\s]{0,}\\#ENDIF[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}`, 'g')
     source = source.replace(matchReg, val => {
-        var regs = /(\<\!\-\-(\s*)\#[i|I][f|F])((?!\n\r)\s)(((?!(#[i|I][f|F])).)+)(\s*)(\-\-\>)[\r\n]/g;
-        let platformValue = "";
-        val.replace(regs, env => {
-            platformValue = env.replace(/\<\!\-\-/g,'').replace(/\-\-\>/g,'').replace(/\#IF/g,'').trim();
-            return env;
-        });
         if (!isPass) return '';
-        val = val.replace(regs, '').replace(/\<\!\-\-/g,'').replace(/\-\-\>/g,'').replace(/\#IF/g,'').trim();
+        var regs = /(\<\!\-\-(\s*)\#IF)((?!\n\r)\s)(((?!(#IF)).)+)(\s*)(\-\-\>)[\r\n]/g;
+        var regsR = /(\<\!\-\-(\s*)\#ENDIF)((?!\n\r)\s)(((?!(#[i|I][f|F])).)+)(\s*)(\-\-\>)[\r\n]{0,1}/g;
+        val = val.replace(regs, '').replace(regsR,'').replace(/\<\!\-\-/g,'').replace(/\-\-\>/g,'').replace(/\#IF/g,'');
         return val;
     });
     return source;
@@ -100,11 +90,14 @@ export default function (source: string) {
     if (!config) config = new Object();
     const conditionList = GetCondition(config);
     conditionList.map(v => {
+        const matchReg = new RegExp(`\\/\\/\\#IF[\\s]{1,}${v.key}[\\s]{0,}[\\r\\n]((?!\\#IF).|\\r\\n)+\\/\\/\\#ENDIF[\\s]{1,}${v.key}[\\s]{0,}[\\r\\n]`, 'g');
+        if(!source.match(matchReg)) return;
         source = jsCodePrecompile(source, v.key, v.value);
     });
     conditionList.map(v => {
+        const matchReg = new RegExp(`\\<\\!\\-\\-[\\s]{0,}\\#IF[\\s]{1,}${v.key}[\\s]{0,}\\-\\-\\>[\\r\\n]((?!\\#IF).|\\r\\n)+\\<\\!\\-\\-[\\s]{0,}\\#ENDIF[\\s]{1,}${v.key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}`, 'g')
+        if(!source.match(matchReg)) return;
         source = htmlCodePrecompile(source, v.key, v.value);
     });
-    source = jsCodePrecompile(source, 'MOBILE', false);
     return source;
 }
