@@ -6,8 +6,8 @@ type configItem = {
     value: boolean
 }
 
-const jsCodePrecompile = (source: string, key: string, isPass: boolean = false) => {
-    const matchReg = new RegExp(`\\/\\/\\#IF[\\s]{1,}${key}[\\s]{0,}[\\r\\n]((?!\\#IF).|\\r\\n)+\\/\\/\\#ENDIF[\\s]{1,}${key}[\\s]{0,}[\\r\\n]`, 'g');   
+const jsCodePrecompile = (source: string, key: string, isPass: boolean = false) => {    
+    const matchReg = new RegExp(`\\/\\/\\#IF[\\s]{1,}${key}[\\s]{0,}[\\r\\n]((?!\\#IF)[\\s\\S])+\\/\\/\\#ENDIF[\\s]{1,}${key}[\\s]{0,}[\\r\\n]{0,1}`, 'g');   
     source = source.replace(matchReg, val => {        
         if (!isPass) return '';        
         var regsL = new RegExp(`(\\/\\/\\#IF)((?!\\n\\r)\\s)${key}`);
@@ -19,7 +19,7 @@ const jsCodePrecompile = (source: string, key: string, isPass: boolean = false) 
 }
 
 const htmlCodePrecompile = (source: string, key: string, isPass: boolean = false) => {
-    const matchReg = new RegExp(`\\<\\!\\-\\-[\\s]{0,}\\#IF[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\r\\n]((?!\\/\\/#IF).|\\r\\n)+\\<\\!\\-\\-[\\s]{0,}\\#ENDIF[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}`, 'g')
+    const matchReg = new RegExp(`\\<\\!\\-\\-[\\s]{0,}\\#IF[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}((?!\\/\\/#IF)[\\s\\S])+\\<\\!\\-\\-[\\s]{0,}\\#ENDIF[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}`, 'g')
     source = source.replace(matchReg, val => {
         if (!isPass) return '';
         var regs = /(\<\!\-\-(\s*)\#IF)((?!\n\r)\s)(((?!(#IF)).)+)(\s*)(\-\-\>)[\r\n]/g;
@@ -90,12 +90,12 @@ export default function (source: string) {
     if (!config) config = new Object();
     const conditionList = GetCondition(config);
     conditionList.map(v => {
-        const matchReg = new RegExp(`\\/\\/\\#IF[\\s]{1,}${v.key}[\\s]{0,}[\\r\\n]((?!\\#IF).|\\r\\n)+\\/\\/\\#ENDIF[\\s]{1,}${v.key}[\\s]{0,}[\\r\\n]`, 'g');
+        const matchReg = new RegExp(`\\/\\/\\#IF[\\s]{1,}${v.key}[\\s]{0,}[\\r\\n]((?!\\#IF)[\\s\\S])+\\/\\/\\#ENDIF[\\s]{1,}${v.key}[\\s]{0,}[\\r\\n]{0,1}`, 'g');
         if(!source.match(matchReg)) return;
         source = jsCodePrecompile(source, v.key, v.value);
     });
     conditionList.map(v => {
-        const matchReg = new RegExp(`\\<\\!\\-\\-[\\s]{0,}\\#IF[\\s]{1,}${v.key}[\\s]{0,}\\-\\-\\>[\\r\\n]((?!\\#IF).|\\r\\n)+\\<\\!\\-\\-[\\s]{0,}\\#ENDIF[\\s]{1,}${v.key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}`, 'g')
+        const matchReg = new RegExp(`\\<\\!\\-\\-[\\s]{0,}\\#IF[\\s]{1,}${v.key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}((?!\\#IF)[\\s\\S])+\\<\\!\\-\\-[\\s]{0,}\\#ENDIF[\\s]{1,}${v.key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}`, 'g')        
         if(!source.match(matchReg)) return;
         source = htmlCodePrecompile(source, v.key, v.value);
     });
