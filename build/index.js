@@ -58,6 +58,7 @@ const CompressionCode = async(distPath) => {
             var result = UglifyJS.minify(code);
             var minifyCode = result.code;
             fs.writeFileSync(curPath, minifyCode, 'utf-8');
+            // fs.writeFileSync(curPath, code, 'utf-8');
             console.log(`Compression js file [${file}] was successful`);
         });
         resolve();

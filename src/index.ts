@@ -52,22 +52,27 @@ function setMatchList(source:string = '',key:string,allow=false,type:'html' | 'j
     }
     const {pattern,endifPattern,firstPattern} = getRegx(type)
     let resultArrs = source.match(pattern);
-    let result:string = resultArrs ? resultArrs[0] : ''
+    if(!resultArrs) return source
+    let result:string = resultArrs[0]
     if(allow){
       result = result.replace(firstPattern,'').replace(endifPattern,'')
-      return;
+      return source.replace(pattern,result);
     }
-    const endItems = source.matchAll(endifPattern); 
-    const firstItems = source.matchAll(firstPattern);
+    const endItems = result.matchAll(endifPattern); 
+    const firstItems = result.matchAll(firstPattern);
     const endIndex = [...endItems].map(item=>item.index||0)
     const firstIndex = [...firstItems].map(item=>item.index||0)
     const indexs = macthTransfrom(firstIndex,endIndex)
+    let removeItems:any[] = []
     indexs.forEach(item=>{
       const start = item[0]
       const end = item[1]
-      result = result.replace(result.substr(start,end),'')
+      removeItems.push(result.substr(start,end))
     })
-    return source.replace(pattern,result)
+    removeItems.forEach(item=>{
+      source = source.replace(item,'')
+    })
+    return source
   }
 
 interface optionItems  {
@@ -80,10 +85,10 @@ interface optionItems  {
      */
     config?:{[key:string]:boolean}
 }
-export default function (source: string) {
-    let options:optionItems = getOptions(this);
-    const { config, configPath } = options || {}
-    if(!config && !configPath) return source
+
+const transform = (content:string,options:optionItems)=>{
+  const { config, configPath } = options || {}
+    if(!config && !configPath) return content
     let precompileConfig = {}
     if(configPath){
         const confStr = fs.readFileSync(configPath,'utf-8')
@@ -96,7 +101,12 @@ export default function (source: string) {
     precompileConfig = Object.assign({},precompileConfig,config||{})
     Object.keys(precompileConfig).forEach(key=>{
         const val = precompileConfig[key]
-        source = setMatchList(source,key,val) || ''
+        content = setMatchList(content,key,val) || ''
+        content = setMatchList(content,key,val,'html') || ''
     })
-    return source;
+    return content
+}
+export default function (source: string) {
+  let options:optionItems = getOptions(this);
+  return transform(source,options)
 }

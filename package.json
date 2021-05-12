@@ -1,6 +1,6 @@
 {
     "name": "dpape-precompile-loader",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "description": "web precompile webpack loader",
     "main": "lib/index.js",
     "scripts": {
