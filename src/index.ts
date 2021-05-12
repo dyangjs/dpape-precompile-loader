@@ -1,103 +1,102 @@
 var { getOptions } = require('loader-utils');
 import * as fs from 'fs';
 
-type configItem = {
-    key: string
-    value: boolean
-}
-
-const jsCodePrecompile = (source: string, key: string, isPass: boolean = false) => {    
-    const matchReg = new RegExp(`\\/\\/\\#IF[\\s]{1,}${key}[\\s]{0,}[\\r\\n]((?!\\#IF)[\\s\\S])+\\/\\/\\#ENDIF[\\s]{1,}${key}[\\s]{0,}[\\r\\n]{0,1}`, 'g');   
-    source = source.replace(matchReg, val => {        
-        if (!isPass) return '';        
-        var regsL = new RegExp(`(\\/\\/\\#IF)((?!\\n\\r)\\s)${key}`);
-        var regsR = new RegExp(`((?![\\r|\\n])\\s)*(\\/\\/\\#ENDIF\\s${key})`);
-        val = val.replace(regsL, '').replace(regsR, '');
-        return val;
-    });
-    return source;
-}
-
-const htmlCodePrecompile = (source: string, key: string, isPass: boolean = false) => {
-    const matchReg = new RegExp(`\\<\\!\\-\\-[\\s]{0,}\\#IF[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}((?!\\/\\/#IF)[\\s\\S])+\\<\\!\\-\\-[\\s]{0,}\\#ENDIF[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}`, 'g')
-    source = source.replace(matchReg, val => {
-        if (!isPass) return '';
-        var regs = /(\<\!\-\-(\s*)\#IF)((?!\n\r)\s)(((?!(#IF)).)+)(\s*)(\-\-\>)[\r\n]/g;
-        var regsR = /(\<\!\-\-(\s*)\#ENDIF)((?!\n\r)\s)(((?!(#[i|I][f|F])).)+)(\s*)(\-\-\>)[\r\n]{0,1}/g;
-        val = val.replace(regs, '').replace(regsR,'').replace(/\<\!\-\-/g,'').replace(/\-\-\>/g,'').replace(/\#IF/g,'');
-        return val;
-    });
-    return source;
+/**
+ * macth transfrom
+ * @param startIndex 
+ * @param endIndex 
+ * @returns 
+ */
+const macthTransfrom = (startIndex:Array<number>=[],endIndex:Array<number>=[])=>{
+    let result:Array<Array<number>> = []
+    const getEnd = (val:number,index:number)=>{
+      let end = -1;
+      startIndex.slice(index+1).some((item,i)=>{
+        const isEnd = item > endIndex[i];
+        if(isEnd) {
+          end = endIndex[i]
+        }
+        return isEnd 
+      })
+      return end !== -1 ? end : endIndex[index];
+    }
+    startIndex.forEach((val,i)=>{
+      result.push([val,getEnd(val,i)])
+    })
+    return result;
 }
 
 /**
- * 获取配置信息
+ * Set Matching Rules
+ * @param str 
+ * @param key 
+ * @param allow 
+ * @returns 
  */
-const GetCondition = (config: any = new Object()): Array<configItem> => {
-    let result:Array<configItem> = new Array();
-    let copyConfig = JSON.parse(JSON.stringify(config));
-    delete copyConfig.common;
-    const keys = Object.keys(copyConfig);
-    if(config.common){
-        const commonKeys = Object.keys(config.common);
-        commonKeys.map(key=>{
-            const v = config.common[key];
-            const value = typeof v === 'object' ? Boolean(v.enabled) : Boolean(v);
-            result.push({key:key,value:value});
-        });
+function setMatchList(source:string = '',key:string,allow=false,type:'html' | 'js' = 'js') {
+    const getRegx = (type:'html' | 'js' = 'js')=>{
+      let pattern = type === 'js' ? 
+      (new RegExp(`\\/\\/[\\s]{0,}\\#if[\\s]{1,}${key}[\\s\\S]*\\/\\/[\\s]{0,}\\#endif[\\s]{1,}${key}[\\r\\n]{0,1}`,'gim'))
+      : (new RegExp(`\\<\\!\\-\\-[\\s]{0,}\\#if[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\s\\S]*\\<\\!\\-\\-[\\s]{0,}\\#endif[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}`,'gim'))
+      let endifPattern = type === 'js' ? 
+      (new RegExp(`\\/\\/[\\s]{0,}\\#endif[\\s]{0,1}${key}[\\r\\n]{0,1}`,'gim')) : 
+      (new RegExp(`\\<\\!\\-\\-[\\s]{0,}\\#endif[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}`,'gim'))
+      let firstPattern = type === 'js' ? 
+      (new RegExp(`\\/\\/[\\s]{0,}\\#if[\\s]{0,1}${key}[\\r\\n]{0,1}`,'gim')) :
+      (new RegExp(`\\<\\!\\-\\-[\\s]{0,}\\#if[\\s]{1,}${key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}`,'gim'))
+      return {
+        pattern,
+        endifPattern,
+        firstPattern
+      }
     }
-    const fnAddkey= (data:any = new Object())=>{
-        const fnKeys = Object.keys(data);
-        fnKeys.map(key=>{
-            const v = fnKeys[key];
-            const value = typeof v === 'object' ? Boolean(v.enabled) : Boolean(v);
-            result.push({
-                key:key,
-                value:value
-            });
-        });
-    };
-    keys.map(key=>{
-        const v = copyConfig[key];
-        const value = typeof v === 'object' ? Boolean(v.enabled) : Boolean(v);
-        result.push({
-            key:key,
-            value:value
-        });
-        if(!value) return;
-        if(typeof v === 'object' && v.fn) fnAddkey(v.fn);
-        if(typeof v === 'object' && !(v instanceof Array) && v.children){
-            var childResult = GetCondition(v.children);
-            result = result.concat(childResult);
-        }
+    const {pattern,endifPattern,firstPattern} = getRegx(type)
+    let resultArrs = source.match(pattern);
+    let result:string = resultArrs ? resultArrs[0] : ''
+    if(allow){
+      result = result.replace(firstPattern,'').replace(endifPattern,'')
+      return;
+    }
+    const endItems = source.matchAll(endifPattern); 
+    const firstItems = source.matchAll(firstPattern);
+    const endIndex = [...endItems].map(item=>item.index||0)
+    const firstIndex = [...firstItems].map(item=>item.index||0)
+    const indexs = macthTransfrom(firstIndex,endIndex)
+    indexs.forEach(item=>{
+      const start = item[0]
+      const end = item[1]
+      result = result.replace(result.substr(start,end),'')
     })
-    return result;
-};
+    return source.replace(pattern,result)
+  }
 
+interface optionItems  {
+    /**
+     * config file path (.json)
+     */
+    configPath?:string
+    /**
+     * percompile config
+     */
+    config?:{[key:string]:boolean}
+}
 export default function (source: string) {
-    var options = getOptions(this);
-    options = options || new Object();
-    let configPath = options.configPath;
-    let config = options.config;
-    if (fs.existsSync(configPath)) {
-        try {
-            var conditionStr = fs.readFileSync(configPath, 'utf-8');
-            config = JSON.parse(conditionStr);
-        } catch (e) {
-            console.log('The configuration file sequence failed!');
+    let options:optionItems = getOptions(this);
+    const { config, configPath } = options || {}
+    if(!config && !configPath) return source
+    let precompileConfig = {}
+    if(configPath){
+        const confStr = fs.readFileSync(configPath,'utf-8')
+        try{
+            precompileConfig = JSON.parse(confStr)
+        }catch(err){
+            precompileConfig = {}
         }
     }
-    if (!config) config = new Object();
-    const conditionList = GetCondition(config);
-    conditionList.map(v => {
-        const matchReg = new RegExp(`\\/\\/\\#IF[\\s]{1,}${v.key}[\\s]{0,}[\\r\\n]((?!\\#IF)[\\s\\S])+\\/\\/\\#ENDIF[\\s]{1,}${v.key}[\\s]{0,}[\\r\\n]{0,1}`, 'g');
-        if(!source.match(matchReg)) return;
-        source = jsCodePrecompile(source, v.key, v.value);
-    });
-    conditionList.map(v => {
-        const matchReg = new RegExp(`\\<\\!\\-\\-[\\s]{0,}\\#IF[\\s]{1,}${v.key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}((?!\\#IF)[\\s\\S])+\\<\\!\\-\\-[\\s]{0,}\\#ENDIF[\\s]{1,}${v.key}[\\s]{0,}\\-\\-\\>[\\r\\n]{0,1}`, 'g')        
-        if(!source.match(matchReg)) return;
-        source = htmlCodePrecompile(source, v.key, v.value);
-    });
+    precompileConfig = Object.assign({},precompileConfig,config||{})
+    Object.keys(precompileConfig).forEach(key=>{
+        const val = precompileConfig[key]
+        source = setMatchList(source,key,val) || ''
+    })
     return source;
 }

@@ -9,12 +9,14 @@
         "noImplicitThis": false,
         "module": "commonjs",
         "moduleResolution": "node",
+        "downlevelIteration": true,
         "target": "es5",
         "lib": [
             "dom",
             "scripthost",
             "es2015",
-            "es2015.promise"
+            "es2015.promise",
+            "es2020"
         ],
         "allowSyntheticDefaultImports": true,
         "experimentalDecorators": true,

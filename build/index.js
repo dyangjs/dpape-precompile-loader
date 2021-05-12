@@ -71,7 +71,7 @@ const builds = async() => {
     try {
         await removeListFile();
         spinner.update('Build Ts code ...');
-        await spawnAsync('tsc');
+        await spawnAsync('npx',['tsc']);
         console.log('Ts code build was successful');
         spinner.update('Compression code ...');
         await CompressionCode();
